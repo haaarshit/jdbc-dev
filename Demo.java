@@ -10,20 +10,23 @@ public class Demo {
     // url for postgresql
     private static String url = "jdbc:postgresql://localhost:5432/testdb";
     // query
-    private static String sqlQuery = "select name,price from product where id=4";
+    private static String sqlQuery = "select name,price from product";
         public static void main(String[] args)  {
             try{
                 // connect with db
                 Connection con = DriverManager.getConnection(url, username, password);
                 // create statement
                 Statement sts = con.createStatement();
-                // execute sql query ans store result in result set
+                // execute sql query and store result in result set
                 ResultSet res =sts.executeQuery(sqlQuery);
                 // move pointer to first row
-                res.next();
+                while (res.next()){
                 // get data from colum 1 at row 0
                 String name = res.getString(1);
-                System.out.println("Name is "+name);
+                int value = res.getInt(2);
+                System.out.println("Name of product is "+name+" value of "+value);
+                }
+
             }
             catch (SQLException e){
                 System.out.println(e.getMessage());
