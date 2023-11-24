@@ -30,3 +30,6 @@ with database in Java.
 
 #### Program flow
 Connect ide with database using connector(jar files) -> Load Drivers -> Create Connection -> Create Statement -> Execute Query
+
+#### createStatment vs preparedStament
+Prepared statment is more optimize than cretaeStatment as it does not compile SQL query again and again
