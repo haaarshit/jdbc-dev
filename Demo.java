@@ -19,12 +19,11 @@ public class Demo {
                 Statement sts = con.createStatement();
                 // execute sql query and store result in result set
                 ResultSet res =sts.executeQuery(sqlQuery);
-                // move pointer to first row
+                // move pointer from one row to another
                 while (res.next()){
-                // get data from colum 1 at row 0
-                String name = res.getString(1);
-                int value = res.getInt(2);
-                System.out.println("Name of product is "+name+" value of "+value);
+                  String name = res.getString(1);
+                  int value = res.getInt(2);
+                  System.out.println("Name of product is "+name+" value of "+value);
                 }
 
             }
