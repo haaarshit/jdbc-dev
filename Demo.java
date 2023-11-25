@@ -1,4 +1,7 @@
+import java.io.*;
 import java.sql.*;
+import java.util.Arrays;
+import java.util.Scanner;
 
 public class Demo {
 
@@ -53,12 +56,14 @@ public class Demo {
             catch (SQLException e){
                 System.out.println(e);
             }
-            try{
-                Connection con = DriverManager.getConnection(url, username, password);
-                // using prepare statement
-                // prepare statement
-                String insertQuery = "INSERT INTO product(id,name,price) VALUES(?,?,?)";
-                PreparedStatement psts = con.prepareStatement(insertQuery);
+
+            // Prepared statement
+//            try{
+//                Connection con = DriverManager.getConnection(url, username, password);
+////                 using prepare statement
+////                 prepare statement
+//                String insertQuery = "INSERT INTO product(id,name,price) VALUES(?,?,?)";
+//                PreparedStatement psts = con.prepareStatement(insertQuery);
 //                psts.setInt(1,9);
 //                psts.setString(2,"Laptop");
 //                psts.setInt(3,48999);
@@ -82,17 +87,61 @@ public class Demo {
 
 
 //                String findQuery = "SELECT name FROM product WHERE id = ?";
-                String findQuery = "SELECT price FROM product WHERE id = ?";
-                psts = con.prepareStatement(findQuery);
-                psts.setInt(1,8);
-                ResultSet res = psts.executeQuery();
-                res.next();
-                System.out.println("Price : "+res.getString(1));
+//                String findQuery = "SELECT price FROM product WHERE id = ?";
+//                psts = con.prepareStatement(findQuery);
+//                psts.setInt(1,8);
+//                ResultSet res = psts.executeQuery();
+//                res.next();
+//                System.out.println("Price : "+res.getString(1));
+
+//                String deleteQuery = "DELETE FROM product WHERE id = ?";
+//                psts = con.prepareStatement(deleteQuery);
+//                psts.setInt(1,9);
+//                int rows = psts.executeUpdate();
+//                System.out.println("Rowes affected "+rows);
+
+//            }
+//            catch (SQLException e){
+//                System.out.println(e);
+//            }
+
+            // Batch Processing
+            try(Connection con = DriverManager.getConnection(url,username,password)){
+
+                BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+
+                // prepare statement
+                String query = "INSERT INTO product(id,name,price) VALUES(?,?,?)";
+                PreparedStatement sts = con.prepareStatement(query);
+
+                System.out.println("Enter the current  id of the table");
+                int uniqueid = Integer.parseInt(bf.readLine()) + 1;
+
+                System.out.println("Enter name and price");
+                while(true){
+                    String name = bf.readLine();
+                    int price = Integer.parseInt(bf.readLine());
+                    System.out.print("More data?? Y/N");
+                    String choice = bf.readLine();
+                    sts.setInt(1,uniqueid);
+                    sts.setString(2,name);
+                    sts.setInt(3,price);
+                    System.out.println("query "+sts);
+                    sts.addBatch();
+                    uniqueid++;
+                    if(choice.toUpperCase().equals("N")) break;
+                }
+                int[] arr = sts.executeBatch();
+                System.out.println("Output for all query "+ Arrays.toString(arr));
 
             }
             catch (SQLException e){
                 System.out.println(e);
             }
+            catch (IOException e){
+                System.out.println(e.getMessage());
+            }
+
     }
 }
 /*
