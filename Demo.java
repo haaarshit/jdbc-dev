@@ -1,3 +1,4 @@
+import javax.swing.tree.ExpandVetoException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -17,10 +19,14 @@ public class Demo {
     private static String password = "root";
 
     // url for postgresql
-    private static String url = "jdbc:postgresql://localhost:5432/testdb";
+//    private static String url = "jdbc:postgresql://localhost:5432/testdb";
+    private static String url = "jdbc:postgresql://localhost:5432/transactions";
     // query
 
         public static void main(String[] args)  {
+
+                BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+
 
             try{
                 // connect with db
@@ -112,33 +118,81 @@ public class Demo {
 //            }
 
             // Batch Processing
+//            try(Connection con = DriverManager.getConnection(url,username,password)){
+//
+//
+//                // prepare statement
+//                String query = "INSERT INTO product(id,name,price) VALUES(?,?,?)";
+//                PreparedStatement sts = con.prepareStatement(query);
+//
+//                System.out.println("Enter the current  id of the table");
+//                int uniqueid = Integer.parseInt(bf.readLine()) + 1;
+//
+//                System.out.println("Enter name and price");
+//                while(true){
+//                    String name = bf.readLine();
+//                    int price = Integer.parseInt(bf.readLine());
+//                    System.out.print("More data?? Y/N");
+//                    String choice = bf.readLine();
+//                    sts.setInt(1,uniqueid);
+//                    sts.setString(2,name);
+//                    sts.setInt(3,price);
+//                    System.out.println("query "+sts);
+//                    sts.addBatch();
+//                    uniqueid++;
+//                    if(choice.toUpperCase().equals("N")) break;
+//                }
+//                int[] arr = sts.executeBatch();
+//                System.out.println("Output for all query "+ Arrays.toString(arr));
+//
+//            }
+//            catch (SQLException e){
+//                System.out.println(e);
+//            }
+//            catch (IOException e){
+//                System.out.println(e.getMessage());
+//            }
+
+            // Transaction handling
+
+
+            // transactions
             try(Connection con = DriverManager.getConnection(url,username,password)){
+                // disable auto commit'
+                con.setAutoCommit(false);
 
-                BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+                // user inputs
+                System.out.println("enter amount to debit");
+                double amount = Double.parseDouble(bf.readLine());
+                System.out.println("Enter debit account number");
+                int debit_acc_no = Integer.parseInt(bf.readLine());
+                System.out.println("Enter debit account number");
+                int credit_acc_no = Integer.parseInt(bf.readLine());
 
-                // prepare statement
-                String query = "INSERT INTO product(id,name,price) VALUES(?,?,?)";
-                PreparedStatement sts = con.prepareStatement(query);
+                String debit_query = "UPDATE accounts SET balance = balance - ? WHERE account_no = ?";
+                String credit_query = "UPDATE accounts SET balance = balance +  ? WHERE account_no = ?";
+                PreparedStatement debit_psts = con.prepareStatement(debit_query);
+                PreparedStatement credit_psts = con.prepareStatement(credit_query);
 
-                System.out.println("Enter the current  id of the table");
-                int uniqueid = Integer.parseInt(bf.readLine()) + 1;
-
-                System.out.println("Enter name and price");
-                while(true){
-                    String name = bf.readLine();
-                    int price = Integer.parseInt(bf.readLine());
-                    System.out.print("More data?? Y/N");
-                    String choice = bf.readLine();
-                    sts.setInt(1,uniqueid);
-                    sts.setString(2,name);
-                    sts.setInt(3,price);
-                    System.out.println("query "+sts);
-                    sts.addBatch();
-                    uniqueid++;
-                    if(choice.toUpperCase().equals("N")) break;
+                // if debit account does not have sufficient balance then return else proceed
+                if(isSuffcient(con,debit_acc_no,amount) == false){
+                    System.out.println("Insufficient amount");
+                    return;
                 }
-                int[] arr = sts.executeBatch();
-                System.out.println("Output for all query "+ Arrays.toString(arr));
+                // if debit account has enough balance then commit the connection
+                con.setAutoCommit(true);
+
+                debit_psts.setDouble(1,amount);
+                debit_psts.setInt(2,debit_acc_no);
+
+                credit_psts.setDouble(1,amount);
+                credit_psts.setInt(2,credit_acc_no);
+
+                int rowsAffected = debit_psts.executeUpdate();
+                int affectedRows  = credit_psts.executeUpdate();
+                if(rowsAffected == 1 && affectedRows == 1) {
+                    System.out.println("Transaction Successful");
+                }
 
             }
             catch (SQLException e){
@@ -148,7 +202,18 @@ public class Demo {
                 System.out.println(e.getMessage());
             }
 
+
+    }
+    static boolean isSuffcient(Connection connection,int account_no,double amount) throws  SQLException{
+            if(amount <= 0) return false;
+
+            String query = "SELECT balance from accounts WHERE account_no = ?";
+            PreparedStatement psts = connection.prepareStatement(query);
+            psts.setInt(1,account_no);
+            ResultSet result = psts.executeQuery();
+            result.next();
+            if(result.getDouble(1) < amount ) return false;
+            return true;
+
     }
 }
-/*
- */
