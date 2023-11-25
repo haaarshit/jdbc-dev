@@ -154,9 +154,6 @@ public class Demo {
 //            }
 
             // Transaction handling
-
-
-            // transactions
             try(Connection con = DriverManager.getConnection(url,username,password)){
                 // disable auto commit'
                 con.setAutoCommit(false);
